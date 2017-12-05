@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Activity Feed</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.0/css/bulma.min.css">
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title">Blog Realtime Activity Feed!</h1>
+      <div id="events"></div>
+    </div>
+  </section>
+
+  <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
+
+  <script>
+    // connect to Pusher
+    const pusher = new Pusher('418224a2d322497b5dfa', {
+      cluster: 'eu', // gotten from Pusher app dashboard
+      encrypted: true // optional
+    });
+    const channel = pusher.subscribe('blog');
+
+    // listen for relevant events
+    channel.bind('post-added', eventHandler);
+    channel.bind('post-deleted', eventHandler);
+    channel.bind('post-deactivated', eventHandler);
+
+    // handler function to show feed of events
+    function eventHandler (data) {
+      const html = `
+          <div class="box">
+            <article class="media">
+              <div class="media-content">
+                <div class="content">
+                  <p>
+                    <strong>Post ${data.event_name}</strong>
+                    <small>
+                      <i class="fa fa-${ data.event_name == 'created' 
+                        ? `plus` 
+                        : data.event_name == 'deactivated' ? `ban` : `trash`
+                      }"></i>
+                    </small>
+                    <br>
+                    Post with ID [<strong>${data.id}</strong>] has been ${data.event_name}
+                  </p>
+                </div>
+              </div>
+            </article>
+          </div>`;
+      let list = document.querySelector("#events")
+      list.innerHTML += html;
+    }
+  </script>
+</body>
+</html>

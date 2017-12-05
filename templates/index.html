@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home!</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.6.0/css/bulma.min.css">
+  <style>
+    #post-list .card {
+      margin-bottom: 10px;
+    }
+    #post-list .card.deactivated {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title">
+        Realtime Blog
+      </h1>
+      <p class="subtitle">
+        Realtime blog built with <strong><a href="https://pusher.com" target="_blank">Pusher</a></strong>!
+      </p>
+
+      <div class="columns">
+        <div class="column">
+          <form id="post-form">
+            <div class="field">
+              <label class="label">Title</label>
+              <div class="control">
+                <input name="title" class="input" type="text" placeholder="Hello world">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">Content</label>
+              <div class="control">
+                <textarea class="textarea" name="content" rows="10" cols="10"></textarea>
+              </div>
+            </div>
+
+            <div class="field">
+              <button class="button is-primary">Submit</button>
+            </div>
+
+          </form>
+        </div>
+
+
+        <div class="column">
+          <div id="post-list">
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <script src="https://js.pusher.com/4.1/pusher.min.js"></script>
+
+  <script>
+    const pusher = new Pusher('YOUR_APP_KEY', {
+      cluster: 'eu', // gotten from Pusher app dashboard
+      encrypted: true // optional
+    });
+
+    const channel = pusher.subscribe('blog');
+
+    channel.bind('post-added', data => {
+      appendToList(data);
+    });
+
+    channel.bind('post-deleted', data => {
+      const post = document.querySelector(`#${data.id}`);
+      post.parentNode.removeChild(post);
+    });
+
+    channel.bind('post-deactivated', data => {
+      const post = document.querySelector(`#${data.id}`);
+      post.classList.add('deactivated');
+    });
+
+    const form = document.querySelector('#post-form');
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      fetch("/post", {
+        method: 'POST',
+        body: new FormData(form)
+      })
+      .then(r => {
+        form.reset();
+      });
+    }
+
+    function deletePost(id) {
+      fetch(`/post/${id}`, { 
+        method: 'DELETE'
+      });
+    }
+
+    function deactivatePost(id) {
+      fetch(`/post/${id}`, { 
+        method: 'PUT'
+      });
+    }
+
+    function appendToList(data) {
+        const html = `
+          <div class="card" id="${data.id}">
+            <header class="card-header">
+              <p class="card-header-title">${data.title}</p>
+            </header>
+            <div class="card-content">
+              <div class="content">
+                <p>${data.content}</p>
+              </div>
+            </div>
+            <footer class="card-footer">
+              <a href="#" onclick="deactivatePost('${data.id}')" class="card-footer-item">Deactivate</a>
+              <a href="#" onclick="deletePost('${data.id}')" class="card-footer-item">Delete</a>
+            </footer>
+          </div>`;
+        let list = document.querySelector("#post-list")
+        list.innerHTML += html;
+    };
+
+  </script>
+</body>
+</html>
