@@ -1,5 +1,5 @@
 # Flask Realtime Activity Feed
-Realtime activity feed built with Python and Pusher
+Realtime activity feed built with Python and Pusher. You can follow the tutorial for it on the [Pusher Blog](https://blog.pusher.com/build-realtime-activity-feed-flask-pusher/).
 
 To run locally:
 - Clone/Download this repo - `git clone https://github.com/olayinkaos/flask-realtime-activity-feed.git`
